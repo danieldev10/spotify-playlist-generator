@@ -90,7 +90,7 @@ router.post('/generate-playlist', verifyToken, async (req, res) => {
             });
         } catch (err) {
             if (err.response?.status === 401 && refreshToken) {
-                console.log("🔄 Refreshing Spotify token...");
+                console.log("Refreshing Spotify token...");
                 accessToken = await refreshSpotifyToken(
                     refreshToken,
                     process.env.SPOTIFY_CLIENT_ID,
