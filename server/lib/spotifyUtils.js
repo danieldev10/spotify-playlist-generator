@@ -25,7 +25,7 @@ export async function refreshSpotifyToken(refreshToken, clientId, clientSecret) 
 
         return newAccessToken;
     } catch (error) {
-        console.error('❌ Error refreshing Spotify token:', error.response?.data || error.message);
+        console.error('Error refreshing Spotify token:', error.response?.data || error.message);
         throw new Error('Failed to refresh token');
     }
 }

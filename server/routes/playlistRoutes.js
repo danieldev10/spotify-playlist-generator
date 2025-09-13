@@ -19,22 +19,21 @@ const getArtistIds = async (artistNames, accessToken) => {
                 params: {
                     q: name,
                     type: 'artist',
-                    limit: 5, // get top 5 for comparison
+                    limit: 5,
                 },
             });
 
             const artists = res.data.artists.items;
 
-            // Try to find an exact name match (case-insensitive)
             const exactMatch = artists.find(artist => artist.name.toLowerCase() === name.toLowerCase());
 
             if (exactMatch) {
                 artistIds.push(exactMatch.id);
             } else if (artists.length > 0) {
-                // fallback: use the first result
+
                 artistIds.push(artists[0].id);
             } else {
-                console.warn(`❌ No artist found for: ${name}`);
+                console.warn(`No artist found for: ${name}`);
             }
         } catch (err) {
             console.error(`Error fetching artist ID for: ${name}`, err.response?.data || err.message);
@@ -86,7 +85,6 @@ router.post('/generate-playlist', verifyToken, async (req, res) => {
         const refreshToken = user.spotifyRefreshToken;
 
         try {
-            // Quick test call
             await axios.get("https://api.spotify.com/v1/me", {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
@@ -98,7 +96,6 @@ router.post('/generate-playlist', verifyToken, async (req, res) => {
                     process.env.SPOTIFY_CLIENT_ID,
                     process.env.SPOTIFY_CLIENT_SECRET
                 );
-                // Save new token to DB
                 await connection.query(
                     "UPDATE users SET spotifyAccessToken=? WHERE id=?",
                     [accessToken, req.userId]
@@ -108,13 +105,11 @@ router.post('/generate-playlist', verifyToken, async (req, res) => {
             }
         }
 
-        // 🔥 Use AI to refine the request
         const aiData = await analyzePromptWithMistral(prompt);
         const playlistName = aiData.title || prompt.slice(0, 50);
         const genres = aiData.genres || ["pop"];
         const artists = aiData.artists || [];
 
-        // 🎵 Create playlist
         const playlistRes = await axios.post(
             `https://api.spotify.com/v1/users/${user.spotifyId}/playlists`,
             {
@@ -126,7 +121,6 @@ router.post('/generate-playlist', verifyToken, async (req, res) => {
         );
         const playlistId = playlistRes.data.id;
 
-        // 🎤 Fetch songs using genres + artists
         let uris = [];
         for (const genre of genres) {
             const searchRes = await axios.get('https://api.spotify.com/v1/search', {
